@@ -2,6 +2,8 @@ export interface ClientInfo {
   clientName: string;
   address: string;
   dateOfInformation: string;
+  coltId: string;
+  email: string;
 }
 
 export interface ChangeRequest {
@@ -16,6 +18,7 @@ export interface Document {
   name: string;
   required: boolean;
   uploaded: boolean;
+  awaiting?: boolean;
   file?: File;
 }
 

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Clock, CheckCircle, XCircle, Users, FileText } from 'lucide-react';
 import { Case, UserRole } from '../types';
 
 interface DashboardProps {
   cases: Case[];
+  allCases: Case[];
   userRole: UserRole;
   onCaseSelect: (caseId: string) => void;
   onCreateNew: () => void;
@@ -25,12 +26,55 @@ const statusIcons = {
   rejected: XCircle,
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ cases, userRole, onCaseSelect, onCreateNew }) => {
+type FilterType = 'total' | 'pending' | 'inReview' | 'completed';
+
+const Dashboard: React.FC<DashboardProps> = ({ cases, allCases, userRole, onCaseSelect, onCreateNew }) => {
+  const [activeFilter, setActiveFilter] = useState<FilterType>('total');
+
   const stats = {
-    total: cases.length,
-    pending: cases.filter(c => c.status === 'pending').length,
-    inReview: cases.filter(c => c.status === 'with-okw' || c.status === 'with-cdd').length,
-    completed: cases.filter(c => c.status === 'approved' || c.status === 'rejected').length,
+    total: allCases.length,
+    pending: allCases.filter(c => c.status === 'pending').length,
+    inReview: allCases.filter(c => c.status === 'with-okw' || c.status === 'with-cdd').length,
+    completed: allCases.filter(c => c.status === 'approved' || c.status === 'rejected').length,
+  };
+
+  const filteredCases = allCases.filter(c => {
+    if (activeFilter === 'pending') return c.status === 'pending';
+    if (activeFilter === 'inReview') return c.status === 'with-okw' || c.status === 'with-cdd';
+    if (activeFilter === 'completed') return c.status === 'approved' || c.status === 'rejected';
+    return true; // 'total'
+  });
+
+  const StatCard: React.FC<{ title: string; value: number; icon: React.ElementType; filter: FilterType }> = ({ title, value, icon: Icon, filter }) => {
+    const isActive = activeFilter === filter;
+    return (
+      <button
+        onClick={() => setActiveFilter(filter)}
+        className={`w-full bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border transition-all ${
+          isActive ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+        }`}
+      >
+        <div className="flex items-center">
+          <div className={`p-3 rounded-lg ${
+            filter === 'total' ? 'bg-blue-100' :
+            filter === 'pending' ? 'bg-yellow-100' :
+            filter === 'inReview' ? 'bg-purple-100' :
+            'bg-green-100'
+          }`}>
+            <Icon className={`w-6 h-6 ${
+              filter === 'total' ? 'text-blue-600' :
+              filter === 'pending' ? 'text-yellow-600' :
+              filter === 'inReview' ? 'text-purple-600' :
+              'text-green-600'
+            }`} />
+          </div>
+          <div className="ml-4 text-left">
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">{title}</p>
+          </div>
+        </div>
+      </button>
+    );
   };
 
   return (
@@ -52,53 +96,10 @@ const Dashboard: React.FC<DashboardProps> = ({ cases, userRole, onCaseSelect, on
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Total Cases</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.pending}</p>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Pending</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-              <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.inReview}</p>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">In Review</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Completed</p>
-            </div>
-          </div>
-        </div>
+        <StatCard title="Total Cases" value={stats.total} icon={FileText} filter="total" />
+        <StatCard title="Pending" value={stats.pending} icon={Clock} filter="pending" />
+        <StatCard title="In Review" value={stats.inReview} icon={Users} filter="inReview" />
+        <StatCard title="Completed" value={stats.completed} icon={CheckCircle} filter="completed" />
       </div>
 
       {/* Cases Table */}
@@ -131,7 +132,7 @@ const Dashboard: React.FC<DashboardProps> = ({ cases, userRole, onCaseSelect, on
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {cases.map((case_) => {
+              {filteredCases.map((case_) => {
                 const StatusIcon = statusIcons[case_.status];
                 return (
                   <tr key={case_.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">

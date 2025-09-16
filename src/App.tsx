@@ -66,6 +66,7 @@ function App() {
     setCurrentView(page);
     setSelectedCaseId('');
   };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header 
@@ -87,6 +88,7 @@ function App() {
         {currentView === 'dashboard' && (
           <Dashboard
             cases={filteredCases}
+            allCases={cases}
             userRole={user.role}
             onCaseSelect={handleCaseSelect}
             onCreateNew={() => setCurrentView('client-form')}
@@ -107,6 +109,9 @@ function App() {
             onBack={() => setCurrentView('dashboard')}
             onAddComment={(comment) => handleAddComment(selectedCase.id, comment)}
             onStatusUpdate={(status, assignee) => handleStatusUpdate(selectedCase.id, status, assignee)}
+            onAddAttachment={(caseId, newDoc) => { /* TODO: Implement */ }}
+            onRemoveAttachment={(caseId, documentId) => { /* TODO: Implement */ }}
+            onUploadAttachment={(caseId, documentId, file) => { /* TODO: Implement */ }}
           />
         )}
 

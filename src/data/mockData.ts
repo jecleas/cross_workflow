@@ -1,11 +1,11 @@
 import { Case, Document } from '../types';
 
-export const requiredDocuments: Document[] = [
-  { id: '1', name: 'Identity Verification Document', required: true, uploaded: false },
-  { id: '2', name: 'Proof of Address', required: true, uploaded: false },
-  { id: '3', name: 'Account Statement', required: true, uploaded: false },
-  { id: '4', name: 'Tax Documentation', required: false, uploaded: false },
-  { id: '5', name: 'Business Registration (if applicable)', required: false, uploaded: false },
+const requiredDocuments: Document[] = [
+  { id: '1', name: 'Proof of Address', required: false, uploaded: false },
+  { id: '2', name: 'Certificate of Incorporation', required: false, uploaded: false },
+  { id: '3', name: 'Board Resolution', required: false, uploaded: false },
+  { id: '4', name: 'Certificate of Name Change', required: false, uploaded: false },
+  { id: '5', name: 'Proof of Identity', required: false, uploaded: false },
 ];
 
 export const mockCases: Case[] = [
@@ -15,6 +15,8 @@ export const mockCases: Case[] = [
       clientName: 'Acme Corporation',
       address: '123 Business Ave, New York, NY 10001',
       dateOfInformation: '2024-01-15',
+      coltId: 'C12345',
+      email: 'contact@acme.com',
     },
     changeRequests: [
       {
@@ -28,8 +30,8 @@ export const mockCases: Case[] = [
     comments: [],
     status: 'with-okw',
     currentAssignee: 'OKW Team',
-    submittedAt: new Date('2024-01-15T10:00:00Z'),
-    updatedAt: new Date('2024-01-16T09:30:00Z'),
+    submittedAt: new Date('2025-01-15T10:00:00Z'),
+    updatedAt: new Date('2025-01-16T09:30:00Z'),
   },
   {
     id: '2',
@@ -37,6 +39,8 @@ export const mockCases: Case[] = [
       clientName: 'Global Tech Solutions',
       address: '456 Tech Blvd, San Francisco, CA 94105',
       dateOfInformation: '2024-01-18',
+      coltId: 'C67890',
+      email: 'info@globaltech.io',
     },
     changeRequests: [
       {
@@ -50,7 +54,7 @@ export const mockCases: Case[] = [
     comments: [],
     status: 'with-cdd',
     currentAssignee: 'CDD Team',
-    submittedAt: new Date('2024-01-18T14:20:00Z'),
-    updatedAt: new Date('2024-01-19T11:15:00Z'),
+    submittedAt: new Date('2025-01-18T14:20:00Z'),
+    updatedAt: new Date('2025-01-19T11:15:00Z'),
   },
 ];
