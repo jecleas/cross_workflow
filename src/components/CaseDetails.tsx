@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MessageSquare, CheckCircle, XCircle, Clock, Plus, Upload, Trash2 } from 'lucide-react';
 import { Case, Comment, UserRole, Document } from '../types';
 import AttachmentsPane from './AttachmentsPane';
+import DocumentsSection from './DocumentsSection';
 
 interface CaseDetailsProps {
   case_: Case;
@@ -64,9 +65,7 @@ const CaseDetails: React.FC<CaseDetailsProps> = ({
   };
 
   const handleRemoveAttachment = (documentId: string) => {
-    if (window.confirm(`Are you sure you want to remove this attachment?`)) {
-      onRemoveAttachment(documentId);
-    }
+    onRemoveAttachment(documentId);
   };
 
   const handleUploadAttachment = (documentId: string, file: File) => {
@@ -282,6 +281,14 @@ const CaseDetails: React.FC<CaseDetailsProps> = ({
                 </div>
               )}
 
+              <div className="border-t border-gray-200 pt-8">
+                <DocumentsSection
+                  documents={case_.documents}
+                  onFileUpload={handleUploadAttachment}
+                  canUpload={isAssignedUser}
+                />
+              </div>
+
               {/* Add Comment Section */}
               {canComment && (
                 <div className="border-t border-gray-200 pt-8">
@@ -370,6 +377,7 @@ const CaseDetails: React.FC<CaseDetailsProps> = ({
             onAddAttachment={handleAddAttachment}
             onRemoveAttachment={handleRemoveAttachment}
             onUploadAttachment={handleUploadAttachment}
+            canManageAttachments={isAssignedUser}
           />
         </div>
       </div>

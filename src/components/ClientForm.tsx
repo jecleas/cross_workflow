@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { ClientInfo, ChangeRequest, Document, Case } from '../types';
 import AttachmentsPane from './AttachmentsPane';
+import DocumentsSection from './DocumentsSection';
 
 interface ClientFormProps {
   onSubmit: (case_: Case) => void;
@@ -44,6 +45,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showDocumentsSection, setShowDocumentsSection] = useState(false);
   const [activeTab, setActiveTab] = useState<'client-info' | 'change-requests'>('client-info');
+  const [tabErrors, setTabErrors] = useState({ 'client-info': false, 'change-requests': false });
 
   useEffect(() => {
     const requiredDocNames = new Set<string>();
@@ -69,34 +71,44 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    const newTabErrors = { 'client-info': false, 'change-requests': false };
 
     if (!clientInfo.clientName.trim()) {
       newErrors.clientName = 'Client name is required';
+      newTabErrors['client-info'] = true;
     }
     if (!clientInfo.address.trim()) {
       newErrors.address = 'Address is required';
+      newTabErrors['client-info'] = true;
     }
     if (!clientInfo.dateOfInformation) {
       newErrors.dateOfInformation = 'Date of information is required';
+      newTabErrors['client-info'] = true;
     }
     if (!clientInfo.coltId.trim()) {
       newErrors.coltId = 'COLTID is required';
+      newTabErrors['client-info'] = true;
     }
     if (!clientInfo.email.trim()) {
       newErrors.email = 'Email is required';
+      newTabErrors['client-info'] = true;
     } else if (!/\S+@\S+\.\S+/.test(clientInfo.email)) {
       newErrors.email = 'Email is invalid';
+      newTabErrors['client-info'] = true;
     }
 
     changeRequests.forEach((request, index) => {
       if (!request.hdiNumber.trim()) {
         newErrors[`hdiNumber-${index}`] = 'HDI number is required';
+        newTabErrors['change-requests'] = true;
       }
       if (!request.country.trim()) {
         newErrors[`country-${index}`] = 'Country is required';
+        newTabErrors['change-requests'] = true;
       }
       if (!request.typeOfChange.trim()) {
         newErrors[`typeOfChange-${index}`] = 'Type of change is required';
+        newTabErrors['change-requests'] = true;
       }
     });
 
@@ -104,10 +116,12 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) => {
       const requiredDocs = documents.filter(doc => doc.required && !doc.uploaded);
       if (requiredDocs.length > 0) {
         newErrors.documents = 'All required documents must be uploaded';
+        newTabErrors['change-requests'] = true;
       }
     }
 
     setErrors(newErrors);
+    setTabErrors(newTabErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -215,24 +229,26 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('client-info')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`flex items-center space-x-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === 'client-info'
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                    } ${tabErrors['client-info'] && activeTab !== 'client-info' ? 'shake-animation' : ''}`}
                   >
-                    Client Information
+                    <span>Client Information</span>
+                    {tabErrors['client-info'] && <AlertCircle className="w-4 h-4 text-red-500" />}
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab('change-requests')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`flex items-center space-x-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === 'change-requests'
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                    } ${tabErrors['change-requests'] && activeTab !== 'change-requests' ? 'shake-animation' : ''}`}
                   >
-                    Immaterial Changes
+                    <span>Immaterial Changes</span>
+                    {tabErrors['change-requests'] && <AlertCircle className="w-4 h-4 text-red-500" />}
                   </button>
                 </nav>
               </div>
@@ -431,69 +447,12 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) => {
 
               {/* Document Upload */}
               {showDocumentsSection && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Required Documents</h3>
-                  {errors.documents && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-red-600 text-sm flex items-center">
-                        <AlertCircle className="w-4 h-4 mr-2" />
-                        {errors.documents}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="space-y-3">
-                    {documents.filter(d => d.required).map((document) => (
-                      <div key={document.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          {document.uploaded ? (
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <div className={`w-5 h-5 rounded-full border-2 ${document.required ? 'border-red-300' : 'border-gray-300'}`} />
-                          )}
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {document.name}
-                              {document.required && <span className="text-red-500 ml-1">*</span>}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {document.uploaded ? 'Uploaded successfully' : 'Not uploaded'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          {document.uploaded && document.file && (
-                            <p className="text-sm text-gray-500 truncate max-w-[120px]">{document.file.name}</p>
-                          )}
-                          <input
-                            type="file"
-                            id={`file-${document.id}`}
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                handleFileUpload(document.id, file);
-                              }
-                            }}
-                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                          />
-                          <label
-                            htmlFor={`file-${document.id}`}
-                            className={`inline-flex items-center space-x-2 px-4 py-2 border rounded-lg cursor-pointer transition-colors ${
-                              document.uploaded 
-                                ? 'bg-green-50 border-green-300 text-green-700'
-                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                            }`}
-                          >
-                            <Upload className="w-4 h-4" />
-                            <span>{document.uploaded ? 'Replace' : 'Upload'}</span>
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <DocumentsSection
+                  documents={documents}
+                  onFileUpload={handleFileUpload}
+                  canUpload={true}
+                  error={errors.documents}
+                />
               )}
 
               {/* Actions */}
@@ -521,6 +480,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) => {
             onAddAttachment={addAttachment}
             onRemoveAttachment={removeAttachment}
             onUploadAttachment={handleAwaitingFileUpload}
+            canManageAttachments={true}
           />
         </div>
       </div>

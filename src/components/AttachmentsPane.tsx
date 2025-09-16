@@ -7,9 +7,10 @@ interface AttachmentsPaneProps {
   onAddAttachment: () => void;
   onRemoveAttachment: (documentId: string) => void;
   onUploadAttachment: (documentId: string, file: File) => void;
+  canManageAttachments: boolean;
 }
 
-const AttachmentsPane: React.FC<AttachmentsPaneProps> = ({ documents, onAddAttachment, onRemoveAttachment, onUploadAttachment }) => {
+const AttachmentsPane: React.FC<AttachmentsPaneProps> = ({ documents, onAddAttachment, onRemoveAttachment, onUploadAttachment, canManageAttachments }) => {
   const attachsExist = documents.filter(d => d.uploaded || d.awaiting).length > 0;
   const uploadedDocuments = documents.filter(d => d.uploaded);
   const awaitingDocuments = documents.filter(d => d.awaiting);
@@ -40,8 +41,9 @@ const AttachmentsPane: React.FC<AttachmentsPaneProps> = ({ documents, onAddAttac
                 <button
                   type="button"
                   onClick={() => handleRemoveClick(doc)}
-                  className="text-gray-400 hover:text-red-600 ml-2 flex-shrink-0"
+                  className="text-gray-400 hover:text-red-600 ml-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label={`Remove ${doc.name}`}
+                  disabled={!canManageAttachments}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -68,10 +70,13 @@ const AttachmentsPane: React.FC<AttachmentsPaneProps> = ({ documents, onAddAttac
                       }
                     }}
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    disabled={!canManageAttachments}
                   />
                   <label
                     htmlFor={`file-awaiting-${doc.id}`}
-                    className="inline-flex items-center space-x-2 px-3 py-1.5 border border-gray-300 text-gray-700 rounded-md cursor-pointer hover:bg-gray-50 text-sm transition-colors"
+                    className={`inline-flex items-center space-x-2 px-3 py-1.5 border border-gray-300 text-gray-700 rounded-md text-sm transition-colors ${
+                      canManageAttachments ? 'cursor-pointer hover:bg-gray-50' : 'cursor-not-allowed bg-gray-100 opacity-50'
+                    }`}
                   >
                     <Upload className="w-4 h-4" />
                     <span>Upload</span>
@@ -79,8 +84,9 @@ const AttachmentsPane: React.FC<AttachmentsPaneProps> = ({ documents, onAddAttac
                   <button
                     type="button"
                     onClick={() => handleRemoveClick(doc)}
-                    className="text-gray-400 hover:text-red-600 flex-shrink-0"
+                    className="text-gray-400 hover:text-red-600 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label={`Remove ${doc.name}`}
+                    disabled={!canManageAttachments}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -95,7 +101,8 @@ const AttachmentsPane: React.FC<AttachmentsPaneProps> = ({ documents, onAddAttac
         <button
           type="button"
           onClick={onAddAttachment}
-          className="w-full mt-3 flex items-center justify-center space-x-2 text-blue-600 hover:bg-blue-50 font-medium py-2 px-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors"
+          className="w-full mt-3 flex items-center justify-center space-x-2 text-blue-600 hover:bg-blue-50 font-medium py-2 px-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200"
+          disabled={!canManageAttachments}
         >
           <Plus className="w-4 h-4" />
           <span>Add New Attachment</span>

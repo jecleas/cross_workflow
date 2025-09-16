@@ -1,20 +1,20 @@
 import { useState } from 'react';
-import { Case, Comment, UserRole } from '../types';
+import { Case, UserRole, Comment, Document } from '../types';
 import { mockCases } from '../data/mockData';
 
 export const useCaseStore = () => {
   const [cases, setCases] = useState<Case[]>(mockCases);
 
   const addCase = (newCase: Case) => {
-    setCases(prev => [...prev, newCase]);
+    setCases(prevCases => [...prevCases, newCase]);
   };
 
   const updateCaseStatus = (caseId: string, status: Case['status'], assignee: string) => {
-    setCases(prev => prev.map(case_ => 
-      case_.id === caseId 
-        ? { ...case_, status, currentAssignee: assignee, updatedAt: new Date() }
-        : case_
-    ));
+    setCases(prevCases =>
+      prevCases.map(c =>
+        c.id === caseId ? { ...c, status, currentAssignee: assignee, updatedAt: new Date() } : c
+      )
+    );
   };
 
   const addComment = (caseId: string, comment: Omit<Comment, 'id' | 'timestamp'>) => {
@@ -23,30 +23,74 @@ export const useCaseStore = () => {
       id: Date.now().toString(),
       timestamp: new Date(),
     };
-    
-    setCases(prev => prev.map(case_ => 
-      case_.id === caseId 
-        ? { ...case_, comments: [...case_.comments, newComment], updatedAt: new Date() }
-        : case_
-    ));
+    setCases(prevCases =>
+      prevCases.map(c =>
+        c.id === caseId
+          ? { ...c, comments: [...c.comments, newComment], updatedAt: new Date() }
+          : c
+      )
+    );
   };
 
-  const getCase = (caseId: string) => cases.find(case_ => case_.id === caseId);
+  const addAttachment = (caseId: string, newDoc: Document) => {
+    setCases(prevCases =>
+      prevCases.map(c =>
+        c.id === caseId
+          ? { ...c, documents: [...c.documents, newDoc], updatedAt: new Date() }
+          : c
+      )
+    );
+  };
 
-  const getCasesByStatus = (status: Case['status']) => 
-    cases.filter(case_ => case_.status === status);
+  const removeAttachment = (caseId: string, documentId: string) => {
+    setCases(prevCases =>
+      prevCases.map(c => {
+        if (c.id === caseId) {
+          const docToRemove = c.documents.find(d => d.id === documentId);
+          if (!docToRemove) return c;
 
-  const getCasesForRole = (role: UserRole) => {
-    switch (role) {
-      case 'client':
-        return cases;
-      case 'okw':
-        return cases.filter(case_ => case_.status === 'with-okw' || case_.status === 'pending');
-      case 'cdd':
-        return cases.filter(case_ => case_.status === 'with-cdd');
-      default:
-        return cases;
+          let updatedDocuments: Document[];
+          if (docToRemove.required) {
+            // For required docs, just mark as not uploaded
+            updatedDocuments = c.documents.map(d => d.id === documentId ? { ...d, uploaded: false, file: undefined } : d);
+          } else {
+            // For optional docs, remove from the array
+            updatedDocuments = c.documents.filter(d => d.id !== documentId);
+          }
+          return { ...c, documents: updatedDocuments, updatedAt: new Date() };
+        }
+        return c;
+      })
+    );
+  };
+
+  const uploadAttachment = (caseId: string, documentId: string, file: File) => {
+    setCases(prevCases =>
+      prevCases.map(c =>
+        c.id === caseId
+          ? {
+              ...c,
+              documents: c.documents.map(doc =>
+                doc.id === documentId
+                  ? { ...doc, uploaded: true, awaiting: false, file }
+                  : doc
+              ),
+              updatedAt: new Date(),
+            }
+          : c
+      )
+    );
+  };
+
+  const getCase = (caseId: string): Case | undefined => {
+    return cases.find(c => c.id === caseId);
+  };
+
+  const getCasesForRole = (role: UserRole): Case[] => {
+    if (role === 'client') {
+      return cases.filter(c => c.clientInfo.clientName === 'MPJORGAN'); // Example client filter
     }
+    return cases; // OKW and CDD see all cases
   };
 
   return {
@@ -54,8 +98,10 @@ export const useCaseStore = () => {
     addCase,
     updateCaseStatus,
     addComment,
+    addAttachment,
+    removeAttachment,
+    uploadAttachment,
     getCase,
-    getCasesByStatus,
     getCasesForRole,
   };
 };
